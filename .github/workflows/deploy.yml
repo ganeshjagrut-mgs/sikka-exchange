@@ -1,0 +1,96 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'scripts/**'
+      - 'docker-compose.yml'
+      - 'rsync-excludes.txt'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run pre-sync validation
+        run: ./scripts/pre-sync-validation.sh
+
+      - name: Validate Docker Compose
+        run: docker-compose config
+
+      - name: Check syntax
+        run: |
+          find backend -name "*.js" -exec node -c {} \;
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/sikka_deploy_key
+          chmod 600 ~/.ssh/sikka_deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Configure SSH
+        run: |
+          cat >> ~/.ssh/config << EOF
+          Host sikka-prod
+              HostName ${{ secrets.SERVER_HOST }}
+              User ${{ secrets.SERVER_USER }}
+              IdentityFile ~/.ssh/sikka_deploy_key
+              IdentitiesOnly yes
+              ServerAliveInterval 60
+              ServerAliveCountMax 3
+          EOF
+
+      - name: Test SSH connection
+        run: ssh sikka-prod "echo 'SSH connection successful'"
+
+      - name: Sync to production
+        run: ./scripts/sync-to-production.sh
+
+      - name: Run post-sync verification
+        run: ./scripts/post-sync-verification.sh
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+               --data '{"text":"🚀 Sikka deployment completed successfully"}' \
+               "${{ secrets.SLACK_WEBHOOK }}"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+               --data '{"text":"❌ Sikka deployment failed"}' \
+               "${{ secrets.SLACK_WEBHOOK }}"

@@ -1,0 +1,70 @@
+# .dockerignore for Sikka Expo App
+# Reduces Docker build context size and improves build performance
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native builds
+ios/build/
+ios/Pods/
+ios/Podfile.lock
+android/build/
+android/app/build/
+android/.gradle/
+
+# Development files
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Environment files (keep .env.example if you have one)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git/
+.gitignore
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cache directories
+.cache/
+.tmp/
+.temp/
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Logs
+logs/
+*.log
+
+# Documentation builds
+docs/
+*.md
+
+# Screenshots and recordings (from testing)
+.playwright-mcp/

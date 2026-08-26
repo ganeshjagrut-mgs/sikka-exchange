@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sikka Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #54c255;
+            --primary-hover: #45a846;
+            --primary-dim: rgba(84, 194, 85, 0.1);
+            --bg-dark: #181a2a;
+            --surface: #1e2028;
+            --surface-light: #262a36;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A3A3A3;
+            --text-muted: #6b7280;
+            --error: #ef4444;
+            --error-dim: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-dim: rgba(245, 158, 11, 0.1);
+            --success: #2286ff;
+            --border-color: #2a2e3a;
+            --border-radius: 12px;
+            --sidebar-width: 220px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-card h1 {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .login-card h1 span { color: var(--primary); }
+        .login-card p {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        .login-card .form-group {
+            margin-bottom: 16px;
+        }
+        .login-card label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .login-card input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .login-card button:hover { background: var(--primary-hover); }
+        .login-error {
+            background: var(--error-dim);
+            color: var(--error);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* App Container */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+        .app-container.active { display: flex; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--surface);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .sidebar-header h2 span { color: var(--primary); }
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+        .sidebar-nav a:hover {
+            background: var(--surface-light);
+            color: var(--text-primary);
+        }
+        .sidebar-nav a.active {
+            background: var(--primary-dim);
+            color: var(--primary);
+        }
+        .sidebar-nav .nav-icon {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .sidebar-nav .badge {
+            background: var(--warning);
+            color: #000;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .sidebar-nav .badge:empty { display: none; }
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        .sidebar-footer button {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .sidebar-footer button:hover {
+            background: var(--error-dim);
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 24px 32px;
+            min-height: 100vh;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 16px;
+        }
+        .stat-card .stat-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .stat-card.clickable { cursor: pointer; }
+        .stat-card.clickable:hover { border-color: var(--primary); }
+        .stat-card.highlight {
+            border-color: var(--primary);
+            background: var(--primary-dim);
+        }
+        .stat-card.highlight .stat-value { color: var(--primary); }
+
+        /* Section Container */
+        .section { display: none; }
+        .section.active { display: block; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .section-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: var(--surface-light);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .data-table tbody tr { transition: background 0.1s; cursor: pointer; }
+        .data-table tbody tr:hover { background: var(--surface-light); }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tbody tr.selected {
+            background: var(--primary-dim) !important;
+        }
+        .data-table tbody tr.selected td { color: var(--text-primary); }
+        .data-table .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-muted);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-pending { background: var(--warning); color: #000; }
+        .badge-approved { background: var(--primary); color: #000; }
+        .badge-completed { background: var(--primary); color: #000; }
+        .badge-failed, .badge-rejected { background: var(--error); color: #fff; }
+        .badge-paid { background: var(--success); color: #fff; }
+        .badge-none { background: var(--surface-light); color: var(--text-muted); }
+
+        /* Buttons */
+        button, .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover { background: var(--surface); }
+        .btn-danger {
+            background: var(--error);
+            color: #fff;
+        }
+        .btn-danger:hover { background: #dc2626; }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: var(--surface-light);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Forms */
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Inline Form */
+        .inline-form {
+            background: var(--surface-light);
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .inline-form h4 {
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h2 { font-size: 18px; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* User Detail Modal */
+        .user-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .user-info-item label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .user-info-item .value {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .transactions-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .transaction-item:last-child { border-bottom: none; }
+        .transaction-type { font-weight: 500; }
+        .transaction-amount { font-weight: 600; }
+        .transaction-amount.positive { color: var(--primary); }
+        .transaction-amount.negative { color: var(--error); }
+
+        /* Settings */
+        .settings-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .settings-card h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .token-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+        .token-chip {
+            background: var(--surface-light);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .token-chip:hover { border-color: var(--primary); }
+        .token-chip.selected {
+            border-color: var(--primary);
+            background: var(--primary-dim);
+        }
+        .token-chip.inactive { opacity: 0.5; }
+        .token-chip .symbol { font-weight: 600; font-size: 14px; }
+        .token-chip .status { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 2000;
+            display: none;
+        }
+        .toast.show { display: block; }
+        .toast.success {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+        .toast.error {
+            background: var(--error);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <h1><span>Sikka</span> Admin</h1>
+            <p>Sign in to access the dashboard</p>
+            <div class="login-error" id="loginError"></div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" value="admin">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" value="changeme123">
+            </div>
+            <button onclick="handleLogin()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container" id="appContainer">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><span>Sikka</span> Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" data-section="dashboard" class="active">
+                    <span><span class="nav-icon">&#9632;</span> Dashboard</span>
+                </a>
+                <a href="#" data-section="withdrawals">
+                    <span><span class="nav-icon">&#8593;</span> Withdrawals</span>
+                    <span class="badge" id="withdrawalsBadge"></span>
+                </a>
+                <a href="#" data-section="deposits">
+                    <span><span class="nav-icon">&#8595;</span> Deposits</span>
+                    <span class="badge" id="depositsBadge"></span>
+                </a>
+                <a href="#" data-section="users">
+                    <span><span class="nav-icon">&#9787;</span> Users</span>
+                </a>
+                <a href="#" data-section="settings">
+                    <span><span class="nav-icon">&#9881;</span> Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="handleLogout()">Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Stats Bar (3 key metrics only) -->
+            <div class="stats-bar" id="statsBar" style="grid-template-columns: repeat(3, 1fr); max-width: 600px;">
+                <div class="stat-card highlight" style="padding: 20px;">
+                    <div class="stat-label">Broker Balance</div>
+                    <div class="stat-value" id="stat-balance" style="font-size: 28px;">-</div>
+                </div>
+                <div class="stat-card" style="border-color: var(--warning); padding: 20px;">
+                    <div class="stat-label">Platform Earnings</div>
+                    <div class="stat-value" id="stat-earnings" style="color: var(--warning); font-size: 28px;">-</div>
+                </div>
+                <div class="stat-card" style="padding: 20px;">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="stat-users" style="font-size: 28px;">-</div>
+                </div>
+            </div>
+
+            <!-- Hidden elements for data storage (used by loadStats) -->
+            <span id="stat-pending-kyc" style="display:none;"></span>
+            <span id="stat-approved-kyc" style="display:none;"></span>
+            <span id="stat-deposits" style="display:none;"></span>
+            <span id="stat-withdrawals" style="display:none;"></span>
+            <span id="stat-pending-wd" style="display:none;"></span>
+            <span id="stat-trades" style="display:none;"></span>
+
+            <!-- Dashboard Section -->
+            <section class="section active" id="section-dashboard">
+                <div id="dashboardContent">
+                    <div class="loading">Loading...</div>
+                </div>
+            </section>
+
+            <!-- Withdrawals Section -->
+            <section class="section" id="section-withdrawals">
+                <div class="section-header">
+                    <h1>Withdrawal Management</h1>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Amount (USD)</th>
+                                <th>Amount (USDT)</th>
+                                <th>Bank</th>
+                                <th>Account</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdrawalsTableBody">
+                            <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                    <div id="withdrawalActionBar" class="action-bar" style="display: none;">
+                        <button class="btn btn-primary" onclick="showWithdrawalForm('complete')">Complete</button>
+                        <button class="btn btn-danger" onclick="showWithdrawalForm('fail')">Mark Failed</button>
+                    </div>
+                    <div id="withdrawalForm" class="inline-form" style="display: none;">
+                        <h4 id="withdrawalFormTitle">Complete Withdrawal</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>UTR Number</label>
+                                <input type="text" id="withdrawal-utr" placeholder="UTR123456789">
+                            </div>
+                            <div class="form-group">
+                                <label>Failure Reason</label>
+                                <input type="text" id="withdrawal-reason" placeholder="Reason..." disabled>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Admin Notes</label>
+                                <input type="text" id="withdrawal-notes" placeholder="Optional notes...">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-primary" id="withdrawalSubmitBtn" onclick="submitWithdrawalAction()">Submit</button>
+                            <button class="btn btn-secondary" onclick="hideWithdrawalForm()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deposits Section -->
+            <section class="section" id="section-deposits">
+                <div class="section-header">
+                    <h1>Deposit Management</h1>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchDepositTab('approval')">Pending Approval</button>
+                    <button class="tab" onclick="switchDepositTab('transfer')">Ready for Transfer</button>
+                </div>
+                <div id="depositsContent">
+                    <!-- Pending Approval Tab (verify UTR, approve bank transfer) -->
+                    <div id="tab-approval">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Amount (USD)</th>
+                                        <th>Est. USDT</th>
+                                        <th>UTR Number</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="approvalTableBody">
+                                    <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                            <div id="approvalActionBar" class="action-bar" style="display: none;">
+                                <button class="btn btn-primary" onclick="approveDeposit()">Approve</button>
+                                <button class="btn btn-danger" onclick="showRejectForm()">Reject</button>
+                            </div>
+                            <div id="approvalRejectForm" class="inline-form" style="display: none;">
+                                <h4>Reject Deposit</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Rejection Reason</label>
+                                        <input type="text" id="reject-reason" placeholder="UTR not found...">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn btn-danger" onclick="submitReject()">Reject</button>
+                                    <button class="btn btn-secondary" onclick="hideRejectForm()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Ready for Transfer Tab (send USDT to user) -->
+                    <div id="tab-transfer" style="display: none;">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Amount (USD)</th>
+                                        <th>Est. USDT</th>
+                                        <th>UTR Number</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transferTableBody">
+                                    <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                            <div id="transferActionBar" class="action-bar" style="display: none;">
+                                <button class="btn btn-primary" onclick="showTransferForm()">Transfer USDT</button>
+                            </div>
+                            <div id="transferForm" class="inline-form" style="display: none;">
+                                <h4>Transfer USDT</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>USDT Amount</label>
+                                        <input type="number" id="transfer-usdt" step="0.01" placeholder="11.90">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Admin Notes</label>
+                                        <input type="text" id="transfer-notes" placeholder="Optional...">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn btn-primary" onclick="submitTransfer()">Transfer</button>
+                                    <button class="btn btn-secondary" onclick="hideTransferForm()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section class="section" id="section-users">
+                <div class="section-header">
+                    <h1>User Management</h1>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>KYC Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="section" id="section-settings">
+                <div class="section-header">
+                    <h1>Settings</h1>
+                </div>
+
+                <!-- Conversion Rate section removed - now using USD directly -->
+                <!-- <div class="settings-card" style="display: none;">
+                    <h3>Conversion Rate (INR/USDT) - DEPRECATED</h3>
+                    <p style="color: var(--text-muted);">Currency conversion no longer needed. All values display in USD.</p>
+                </div> -->
+
+                <div class="settings-card">
+                    <h3>Token Configuration</h3>
+                    <div class="token-grid" id="tokenGrid"></div>
+                    <div id="tokenEditForm" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <h4 style="margin-bottom: 16px;">Edit Token: <span id="editTokenSymbol"></span></h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="token-status">
+                                    <option value="">-- No Change --</option>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Min Size (USDT)</label>
+                                <input type="number" id="token-min" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Max Size (USDT)</label>
+                                <input type="number" id="token-max" step="0.01">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-primary" onclick="updateToken()">Save Changes</button>
+                            <button class="btn btn-secondary" onclick="cancelTokenEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Trading Fee (Read-Only)</h3>
+                    <p style="color: var(--text-secondary); font-size: 13px;">Trading fees are managed by KuCoin's broker program.</p>
+                    <div id="tradingFeeInfo" style="margin-top: 12px; font-size: 14px;"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Modal Title</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api/admin';
+        let adminToken = localStorage.getItem('adminToken') || '';
+        let currentSection = 'dashboard';
+
+        // State
+        let pendingWithdrawals = [];
+        let selectedWithdrawalId = null;
+        let withdrawalAction = 'complete';
+
+        let pendingApprovalDeposits = [];
+        let selectedApprovalDepositId = null;
+
+        let pendingTransferDeposits = [];
+        let selectedTransferDepositId = null;
+
+        let allUsers = [];
+        let allTokens = [];
+        let selectedToken = null;
+
+        // ============ INITIALIZATION ============
+        document.addEventListener('DOMContentLoaded', () => {
+            if (adminToken) {
+                showApp();
+            }
+
+            // Setup sidebar navigation
+            document.querySelectorAll('.sidebar-nav a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    switchSection(section);
+                });
+            });
+        });
+
+        // ============ AUTH ============
+        async function handleLogin() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('loginError');
+
+            try {
+                const res = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    adminToken = data.data.token;
+                    localStorage.setItem('adminToken', adminToken);
+                    showApp();
+                } else {
+                    errorEl.textContent = data.error || 'Login failed';
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            adminToken = '';
+            localStorage.removeItem('adminToken');
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appContainer').classList.remove('active');
+        }
+
+        async function showApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+            await loadStats();
+            await loadPendingCounts();
+            loadDashboard();
+        }
+
+        // Fetch pending counts for dashboard badges
+        async function loadPendingCounts() {
+            try {
+                const res = await fetch(`${API_BASE}/deposits/pending-approval`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const count = (data.deposits || []).length;
+                    document.getElementById('depositsBadge').textContent = count > 0 ? count : '';
+                }
+            } catch (err) {
+                console.error('Failed to load pending counts:', err);
+            }
+        }
+
+        // ============ NAVIGATION ============
+        function switchSection(section) {
+            currentSection = section;
+
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+            // Show/hide sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`section-${section}`).classList.add('active');
+
+            // Load section data
+            loadSectionData(section);
+        }
+
+        function loadSectionData(section) {
+            switch(section) {
+                case 'dashboard': loadDashboard(); break;
+                case 'withdrawals': loadWithdrawals(); break;
+                case 'deposits': loadDeposits(); break;
+                case 'users': loadUsers(); break;
+                case 'settings': loadSettings(); break;
+            }
+        }
+
+        // ============ STATS ============
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/overview`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const s = data.data;
+                    document.getElementById('stat-users').textContent = s.totalUsers;
+                    document.getElementById('stat-pending-kyc').textContent = s.pendingKYC;
+                    document.getElementById('stat-approved-kyc').textContent = s.approvedKYC;
+                    document.getElementById('stat-deposits').textContent = formatUSD(s.totalDepositsUSD || s.totalDeposits);
+                    document.getElementById('stat-withdrawals').textContent = formatUSD(s.totalWithdrawalsUSD || s.totalWithdrawals);
+                    document.getElementById('stat-pending-wd').textContent = s.pendingWithdrawals;
+                    document.getElementById('stat-trades').textContent = s.totalTrades;
+
+                    if (s.brokerBalance) {
+                        document.getElementById('stat-balance').textContent = s.brokerBalance.usdt.toFixed(2) + ' USDT';
+                    }
+
+                    // Platform earnings (0.1% fee from all trades)
+                    document.getElementById('stat-earnings').textContent = formatUSD(s.platformRevenueUSD || s.platformRevenue || 0);
+
+                    // Update sidebar badges
+                    document.getElementById('withdrawalsBadge').textContent = s.pendingWithdrawals > 0 ? s.pendingWithdrawals : '';
+                }
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        // ============ DASHBOARD ============
+        function loadDashboard() {
+            const content = document.getElementById('dashboardContent');
+
+            // Get stats from hidden elements
+            const pendingKYC = parseInt(document.getElementById('stat-pending-kyc').textContent) || 0;
+            const approvedKYC = parseInt(document.getElementById('stat-approved-kyc').textContent) || 0;
+            const pendingDeposits = parseInt(document.getElementById('depositsBadge').textContent) || 0;
+            const pendingWD = parseInt(document.getElementById('stat-pending-wd').textContent) || 0;
+            const totalDeposits = document.getElementById('stat-deposits').textContent || '$0.00';
+            const totalWithdrawals = document.getElementById('stat-withdrawals').textContent || '$0.00';
+            const totalTrades = document.getElementById('stat-trades').textContent || '0';
+
+            // Build "Needs Attention" items
+            let attentionItems = '';
+
+            if (pendingDeposits > 0) {
+                attentionItems += `
+                    <div onclick="switchSection('deposits')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--error-dim); border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
+                        <span style="color: var(--error);">● ${pendingDeposits} deposit${pendingDeposits > 1 ? 's' : ''} awaiting approval</span>
+                        <span style="color: var(--text-muted);">Review →</span>
+                    </div>`;
+            }
+
+            if (pendingKYC > 0) {
+                attentionItems += `
+                    <div onclick="switchSection('users')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--warning-dim); border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
+                        <span style="color: var(--warning);">● ${pendingKYC} user${pendingKYC > 1 ? 's' : ''} with pending KYC</span>
+                        <span style="color: var(--text-muted);">Review →</span>
+                    </div>`;
+            }
+
+            if (pendingWD > 0) {
+                attentionItems += `
+                    <div onclick="switchSection('withdrawals')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--warning-dim); border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
+                        <span style="color: var(--warning);">● ${pendingWD} withdrawal${pendingWD > 1 ? 's' : ''} pending</span>
+                        <span style="color: var(--text-muted);">Review →</span>
+                    </div>`;
+            }
+
+            if (!attentionItems) {
+                attentionItems = `
+                    <div style="display: flex; align-items: center; padding: 14px 16px; background: var(--primary-dim); border-radius: 8px;">
+                        <span style="color: var(--primary);">✓ All caught up! No pending items.</span>
+                    </div>`;
+            }
+
+            content.innerHTML = `
+                <div class="settings-card" style="margin-bottom: 20px;">
+                    <h3 style="border: none; margin: 0 0 16px 0; padding: 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Needs Attention</h3>
+                    ${attentionItems}
+                </div>
+
+                <div class="settings-card">
+                    <h3 style="border: none; margin: 0 0 16px 0; padding: 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Platform Stats</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div style="padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="color: var(--text-muted); font-size: 12px;">Total Deposits</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">${totalDeposits}</div>
+                        </div>
+                        <div style="padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="color: var(--text-muted); font-size: 12px;">Total Withdrawals</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">${totalWithdrawals}</div>
+                        </div>
+                        <div style="padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="color: var(--text-muted); font-size: 12px;">Total Trades</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">${totalTrades}</div>
+                        </div>
+                        <div style="padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="color: var(--text-muted); font-size: 12px;">Approved KYC</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-top: 4px;">${approvedKYC}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============ WITHDRAWALS ============
+        async function loadWithdrawals() {
+            const tbody = document.getElementById('withdrawalsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
+            selectedWithdrawalId = null;
+            document.getElementById('withdrawalActionBar').style.display = 'none';
+            document.getElementById('withdrawalForm').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/withdrawals/pending`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    pendingWithdrawals = data.data || [];
+
+                    if (pendingWithdrawals.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No pending withdrawals</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = pendingWithdrawals.map((w, i) => `
+                        <tr onclick="selectWithdrawal('${w.id}', ${i})" data-id="${w.id}">
+                            <td>${w.user_email || 'N/A'}</td>
+                            <td><strong>${formatUSD(w.amount_inr || w.amount_usd)}</strong></td>
+                            <td>${w.amount_usdt} USDT</td>
+                            <td>${w.bank_name || '-'}</td>
+                            <td><code>${w.account_number || '-'}</code></td>
+                            <td>${formatDate(w.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: var(--error);">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function selectWithdrawal(id, index) {
+            selectedWithdrawalId = id;
+
+            document.querySelectorAll('#withdrawalsTableBody tr').forEach(tr => tr.classList.remove('selected'));
+            document.querySelector(`#withdrawalsTableBody tr[data-id="${id}"]`).classList.add('selected');
+
+            document.getElementById('withdrawalActionBar').style.display = 'flex';
+            document.getElementById('withdrawalForm').style.display = 'none';
+        }
+
+        function showWithdrawalForm(action) {
+            withdrawalAction = action;
+            document.getElementById('withdrawalForm').style.display = 'block';
+            document.getElementById('withdrawalFormTitle').textContent = action === 'complete' ? 'Complete Withdrawal' : 'Mark as Failed';
+            document.getElementById('withdrawal-utr').disabled = action !== 'complete';
+            document.getElementById('withdrawal-reason').disabled = action === 'complete';
+            document.getElementById('withdrawal-utr').value = action === 'complete' ? 'UTR' + Date.now() : '';
+            document.getElementById('withdrawal-reason').value = '';
+            document.getElementById('withdrawal-notes').value = '';
+            document.getElementById('withdrawalSubmitBtn').className = action === 'complete' ? 'btn btn-primary' : 'btn btn-danger';
+        }
+
+        function hideWithdrawalForm() {
+            document.getElementById('withdrawalForm').style.display = 'none';
+        }
+
+        async function submitWithdrawalAction() {
+            if (!selectedWithdrawalId) return;
+
+            const endpoint = withdrawalAction === 'complete' ? 'complete' : 'fail';
+            const body = withdrawalAction === 'complete' ? {
+                utr_number: document.getElementById('withdrawal-utr').value,
+                admin_notes: document.getElementById('withdrawal-notes').value || 'Completed via admin'
+            } : {
+                failed_reason: document.getElementById('withdrawal-reason').value,
+                admin_notes: document.getElementById('withdrawal-notes').value || 'Failed via admin'
+            };
+
+            if (withdrawalAction === 'fail' && !body.failed_reason) {
+                showToast('Please enter a failure reason', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/withdrawals/${selectedWithdrawalId}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(withdrawalAction === 'complete' ? 'Withdrawal completed!' : 'Withdrawal marked as failed');
+                    loadWithdrawals();
+                    loadStats();
+                } else {
+                    showToast(data.error || 'Action failed', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ============ DEPOSITS ============
+        let currentDepositTab = 'approval';
+
+        function switchDepositTab(tab) {
+            currentDepositTab = tab;
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tabs .tab:${tab === 'approval' ? 'first-child' : 'last-child'}`).classList.add('active');
+
+            document.getElementById('tab-approval').style.display = tab === 'approval' ? 'block' : 'none';
+            document.getElementById('tab-transfer').style.display = tab === 'transfer' ? 'block' : 'none';
+
+            if (tab === 'approval') loadApprovalDeposits();
+            else loadTransferDeposits();
+        }
+
+        async function loadDeposits() {
+            loadApprovalDeposits();
+            loadTransferDeposits();
+        }
+
+        // Load deposits pending approval (step 1: verify UTR)
+        async function loadApprovalDeposits() {
+            const tbody = document.getElementById('approvalTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+            selectedApprovalDepositId = null;
+            document.getElementById('approvalActionBar').style.display = 'none';
+            document.getElementById('approvalRejectForm').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/deposits/pending-approval`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    pendingApprovalDeposits = data.deposits || [];
+
+                    // Update badge
+                    document.getElementById('depositsBadge').textContent = pendingApprovalDeposits.length > 0 ? pendingApprovalDeposits.length : '';
+
+                    if (pendingApprovalDeposits.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No deposits pending approval</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = pendingApprovalDeposits.map((d, i) => `
+                        <tr onclick="selectApprovalDeposit('${d.id}', ${i})" data-id="${d.id}">
+                            <td>${d.user_email || d.user_name || 'N/A'}</td>
+                            <td><strong>${formatUSD(d.amount_inr || d.amount_usd)}</strong></td>
+                            <td>${d.estimated_usdt || '-'} USDT</td>
+                            <td style="color: var(--primary);"><code>${d.utr_number || '-'}</code></td>
+                            <td>${formatDate(d.requested_at || d.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--error);">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function selectApprovalDeposit(id, index) {
+            selectedApprovalDepositId = id;
+
+            document.querySelectorAll('#approvalTableBody tr').forEach(tr => tr.classList.remove('selected'));
+            document.querySelector(`#approvalTableBody tr[data-id="${id}"]`).classList.add('selected');
+
+            document.getElementById('approvalActionBar').style.display = 'flex';
+            document.getElementById('approvalRejectForm').style.display = 'none';
+        }
+
+        async function approveDeposit() {
+            if (!selectedApprovalDepositId) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/deposits/${selectedApprovalDepositId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Deposit approved! Now transfer USDT from "Ready for Transfer" tab.');
+                    loadApprovalDeposits();
+                    loadTransferDeposits();
+                } else {
+                    showToast(data.message || 'Approval failed', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function showRejectForm() {
+            document.getElementById('approvalRejectForm').style.display = 'block';
+        }
+
+        function hideRejectForm() {
+            document.getElementById('approvalRejectForm').style.display = 'none';
+        }
+
+        async function submitReject() {
+            if (!selectedApprovalDepositId) return;
+
+            const reason = document.getElementById('reject-reason').value;
+            if (!reason) {
+                showToast('Please enter a rejection reason', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/deposits/${selectedApprovalDepositId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Deposit rejected');
+                    loadApprovalDeposits();
+                } else {
+                    showToast(data.message || 'Rejection failed', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Load deposits ready for USDT transfer (step 2: send USDT)
+        async function loadTransferDeposits() {
+            const tbody = document.getElementById('transferTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+            selectedTransferDepositId = null;
+            document.getElementById('transferActionBar').style.display = 'none';
+            document.getElementById('transferForm').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/deposits/pending`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    pendingTransferDeposits = data.deposits || [];
+
+                    if (pendingTransferDeposits.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No deposits ready for transfer</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = pendingTransferDeposits.map((d, i) => `
+                        <tr onclick="selectTransferDeposit('${d.id}', ${i})" data-id="${d.id}">
+                            <td>${d.user_email || 'N/A'}</td>
+                            <td><strong>${formatUSD(d.amount_inr || d.amount_usd)}</strong></td>
+                            <td>${d.estimated_usdt || '-'} USDT</td>
+                            <td style="color: var(--primary);"><code>${d.utr_number || '-'}</code></td>
+                            <td>${formatDate(d.paid_at || d.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--error);">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function selectTransferDeposit(id, index) {
+            selectedTransferDepositId = id;
+
+            document.querySelectorAll('#transferTableBody tr').forEach(tr => tr.classList.remove('selected'));
+            document.querySelector(`#transferTableBody tr[data-id="${id}"]`).classList.add('selected');
+
+            document.getElementById('transferActionBar').style.display = 'flex';
+            document.getElementById('transferForm').style.display = 'none';
+
+            const d = pendingTransferDeposits[index];
+            document.getElementById('transfer-usdt').value = d.estimated_usdt || '';
+        }
+
+        function showTransferForm() {
+            document.getElementById('transferForm').style.display = 'block';
+        }
+
+        function hideTransferForm() {
+            document.getElementById('transferForm').style.display = 'none';
+        }
+
+        async function submitTransfer() {
+            if (!selectedTransferDepositId) return;
+
+            const amount = document.getElementById('transfer-usdt').value;
+            const notes = document.getElementById('transfer-notes').value;
+
+            if (!amount || parseFloat(amount) <= 0) {
+                showToast('Please enter a valid USDT amount', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/deposits/${selectedTransferDepositId}/transfer`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount_usdt: parseFloat(amount),
+                        admin_notes: notes || 'Transferred via admin'
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('USDT transferred successfully!');
+                    loadTransferDeposits();
+                    loadStats();
+                } else {
+                    showToast(data.message || 'Transfer failed', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ============ USERS ============
+        async function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+
+            try {
+                const res = await fetch(`${API_BASE}/users?page=1&limit=100`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    allUsers = data.data.users || [];
+
+                    if (allUsers.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No users found</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = allUsers.map(u => `
+                        <tr onclick="showUserModal('${u.id}')">
+                            <td>${u.email}</td>
+                            <td>${u.full_name || '-'}</td>
+                            <td>${u.phone || '-'}</td>
+                            <td><span class="badge badge-${getBadgeClass(u.kyc_status)}">${u.kyc_status || 'none'}</span></td>
+                            <td>${formatDate(u.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--error);">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        async function showUserModal(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            openModal('User Details', '<div class="loading">Loading...</div>', []);
+
+            try {
+                // Fetch user details and transactions in parallel
+                const [detailsRes, txnsRes] = await Promise.all([
+                    fetch(`${API_BASE}/users/${userId}`, { headers: { 'Authorization': `Bearer ${adminToken}` } }),
+                    fetch(`${API_BASE}/users/${userId}/transactions?type=all&limit=50`, { headers: { 'Authorization': `Bearer ${adminToken}` } })
+                ]);
+
+                const detailsData = await detailsRes.json();
+                const txnsData = await txnsRes.json();
+
+                const u = detailsData.success ? detailsData.data.user : user;
+                const kyc = detailsData.success ? detailsData.data.kyc : null;
+                const txns = txnsData.success ? txnsData.data || [] : [];
+
+                const deposits = txns.filter(t => t.type === 'deposit');
+                const withdrawals = txns.filter(t => t.type === 'withdrawal');
+                const trades = txns.filter(t => t.type === 'trade');
+
+                const content = `
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label>Email</label>
+                            <div class="value">${u.email}</div>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Name</label>
+                            <div class="value">${u.full_name || '-'}</div>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Phone</label>
+                            <div class="value">${u.phone || '-'}</div>
+                        </div>
+                        <div class="user-info-item">
+                            <label>KYC Status</label>
+                            <div class="value"><span class="badge badge-${getBadgeClass(u.kyc_status)}">${u.kyc_status || 'none'}</span></div>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Created</label>
+                            <div class="value">${formatDate(u.created_at)}</div>
+                        </div>
+                        <div class="user-info-item">
+                            <label>Last Login</label>
+                            <div class="value">${u.last_login_at ? formatDate(u.last_login_at) : 'Never'}</div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 12px;">Transaction Summary</h4>
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+                        <div style="flex: 1; text-align: center; padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 600;">${deposits.length}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Deposits</div>
+                        </div>
+                        <div style="flex: 1; text-align: center; padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 600;">${withdrawals.length}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Withdrawals</div>
+                        </div>
+                        <div style="flex: 1; text-align: center; padding: 12px; background: var(--surface-light); border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 600;">${trades.length}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Trades</div>
+                        </div>
+                    </div>
+
+                    ${txns.length > 0 ? `
+                        <h4 style="margin-bottom: 12px;">Recent Transactions</h4>
+                        <div class="transactions-list" style="background: var(--surface-light); border-radius: 8px;">
+                            ${txns.slice(0, 10).map(t => `
+                                <div class="transaction-item">
+                                    <div>
+                                        <span class="transaction-type">${t.type.charAt(0).toUpperCase() + t.type.slice(1)}</span>
+                                        <span style="color: var(--text-muted); font-size: 11px; margin-left: 8px;">${formatDate(t.created_at)}</span>
+                                    </div>
+                                    <span class="transaction-amount ${t.type === 'deposit' ? 'positive' : t.type === 'withdrawal' ? 'negative' : ''}">${t.amount_inr || t.amount_usd ? formatUSD(t.amount_inr || t.amount_usd) : (t.amount_usdt ? t.amount_usdt + ' USDT' : '-')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p style="color: var(--text-muted);">No transactions yet.</p>'}
+                `;
+
+                document.getElementById('modalBody').innerHTML = content;
+                document.getElementById('modalFooter').innerHTML = `
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                `;
+            } catch (err) {
+                document.getElementById('modalBody').innerHTML = `<p style="color: var(--error);">Error loading user details: ${err.message}</p>`;
+            }
+        }
+
+        // ============ SETTINGS ============
+        async function loadSettings() {
+            loadConversionRate();
+            loadTokens();
+            loadTradingFee();
+        }
+
+        async function loadConversionRate() {
+            try {
+                const res = await fetch(`${API_BASE}/config/conversion-rate`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('current-rate').value = data.data.conversion_rate + ' INR/USDT';
+                }
+            } catch (err) {
+                console.error('Failed to load conversion rate:', err);
+            }
+        }
+
+        async function updateConversionRate() {
+            const newRate = document.getElementById('new-rate').value;
+            if (!newRate || parseFloat(newRate) <= 0) {
+                showToast('Please enter a valid rate', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/config/conversion-rate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rate: parseFloat(newRate) })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Conversion rate updated!');
+                    document.getElementById('current-rate').value = data.data.conversion_rate + ' INR/USDT';
+                    document.getElementById('new-rate').value = '';
+                } else {
+                    showToast(data.error || 'Update failed', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function loadTokens() {
+            try {
+                const res = await fetch(`${API_BASE}/config/tokens`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    allTokens = data.data || [];
+                    renderTokenGrid();
+                }
+            } catch (err) {
+                console.error('Failed to load tokens:', err);
+            }
+        }
+
+        function renderTokenGrid() {
+            const grid = document.getElementById('tokenGrid');
+            grid.innerHTML = allTokens.map(t => `
+                <div class="token-chip ${selectedToken === t.symbol ? 'selected' : ''} ${!t.is_active ? 'inactive' : ''}" onclick="selectToken('${t.symbol}')">
+                    <div class="symbol">${t.symbol}</div>
+                    <div class="status">${t.is_active ? 'Active' : 'Inactive'}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectToken(symbol) {
+            selectedToken = symbol;
+            const token = allTokens.find(t => t.symbol === symbol);
+            renderTokenGrid();
+
+            document.getElementById('tokenEditForm').style.display = 'block';
+            document.getElementById('editTokenSymbol').textContent = symbol;
+            document.getElementById('token-status').value = '';
+            document.getElementById('token-min').value = token?.quote_min_size || '';
+            document.getElementById('token-max').value = token?.quote_max_size || '';
+        }
+
+        function cancelTokenEdit() {
+            selectedToken = null;
+            renderTokenGrid();
+            document.getElementById('tokenEditForm').style.display = 'none';
+        }
+
+        async function updateToken() {
+            if (!selectedToken) return;
+
+            const status = document.getElementById('token-status').value;
+            const minSize = document.getElementById('token-min').value;
+            const maxSize = document.getElementById('token-max').value;
+
+            const updateData = {};
+            if (status !== '') updateData.is_active = status === 'true';
+            if (minSize) updateData.quote_min_size = parseFloat(minSize);
+            if (maxSize) updateData.quote_max_size = parseFloat(maxSize);
+
+            if (Object.keys(updateData).length === 0) {
+                showToast('No changes to save', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/config/tokens/${selectedToken}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Token updated!');
+                    loadTokens();
+                    cancelTokenEdit();
+                } else {
+                    showToast(data.error || 'Update failed', 'error');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function loadTradingFee() {
+            try {
+                const res = await fetch(`${API_BASE}/config/trading-fee`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('tradingFeeInfo').innerHTML = `
+                        <strong>Fee: ${data.data.fee_percentage.toFixed(3)}%</strong>
+                        <span style="color: var(--text-muted); margin-left: 8px;">(Source: ${data.data.source})</span>
+                    `;
+                }
+            } catch (err) {
+                console.error('Failed to load trading fee:', err);
+            }
+        }
+
+        // ============ MODAL ============
+        function openModal(title, content, buttons = []) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+
+            const footer = document.getElementById('modalFooter');
+            footer.innerHTML = buttons.map(b =>
+                `<button class="btn ${b.class || 'btn-secondary'}" onclick="${b.onClick}">${b.label}</button>`
+            ).join('');
+
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        // ============ HELPERS ============
+        function formatUSD(amount) {
+            return '$' + parseFloat(amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function getBadgeClass(status) {
+            const map = {
+                'pending': 'pending',
+                'approved': 'approved',
+                'completed': 'completed',
+                'failed': 'failed',
+                'rejected': 'rejected',
+                'paid': 'paid',
+                'pending_approval': 'pending'
+            };
+            return map[status] || 'none';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close modal on overlay click
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modalOverlay') closeModal();
+        });
+    </script>
+</body>
+</html>

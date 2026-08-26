@@ -1,0 +1,87 @@
+# ─────────────────────────────────────────────
+# Secrets & environment
+# ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+sikka-expo/.env
+sikka-expo/.env.*
+!sikka-expo/.env.example
+
+# Credential/state docs (live KuCoin + Firebase keys)
+CRITICAL_STATE_BACKUP.md
+BACKUP_VERIFICATION.md
+QUICK_RECOVERY_CARD.txt
+sikka-ops-reminders.txt
+
+# ─────────────────────────────────────────────
+# Database dumps — contain real user PII,
+# bcrypt hashes, per-user KuCoin API secrets,
+# and base64 KYC identity documents
+# ─────────────────────────────────────────────
+*.sql
+kyc-body.json
+
+# Docker volume
+data/
+
+# ─────────────────────────────────────────────
+# Scripts with hardcoded live credentials
+# (scrub these before removing the ignores)
+# ─────────────────────────────────────────────
+curls/get-deposit-address.sh
+curls/test-deposit-address.sh
+scripts/check-specific-user-balance.js
+scripts/consolidate-funds.js
+scripts/enable-real-trading.sh
+scripts/fund-and-trade-test.js
+scripts/test-money-movement.js
+scripts/test-trading-approved-kyc.js
+scripts/verify-zero-balance.js
+test-ui/comprehensive-test.html
+test-ui/user-flows.html
+test-ui/user-flows-gcp.html
+
+# ─────────────────────────────────────────────
+# Dependencies & build output
+# ─────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.expo/
+sikka-expo/dist/
+sikka-expo/.expo/
+*.tsbuildinfo
+coverage/
+.nyc_output/
+
+# ─────────────────────────────────────────────
+# Logs & debug artifacts
+# ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+rsync-*.log
+monitor.pid
+.playwright-mcp/
+screenshots/
+debug-*.png
+
+# ─────────────────────────────────────────────
+# Backups / scratch
+# ─────────────────────────────────────────────
+*.backup
+*.gcp-backup
+package.json.sdk*
+.gitignore.before-repo-setup
+tmp/
+temp/
+
+# ─────────────────────────────────────────────
+# OS / editor
+# ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

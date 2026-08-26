@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Testing - Sikka</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .response-box {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        .info {
+            background: #e8f4f8;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #4285f4;
+        }
+        .error {
+            background: #ffebee;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #f44336;
+        }
+        input {
+            padding: 8px;
+            width: 300px;
+            margin: 5px;
+        }
+        h2 {
+            margin-top: 30px;
+            border-bottom: 2px solid #4285f4;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Testing - Sikka Exchange</h1>
+
+        <div class="info">
+            <p><strong>Purpose:</strong> Test all admin API endpoints</p>
+            <p><strong>Default Credentials:</strong> username: <code>admin</code> | password: <code>changeme123</code></p>
+        </div>
+
+        <!-- Admin Login Section -->
+        <h2>1. Admin Login</h2>
+        <input type="text" id="admin-username" placeholder="Username" value="admin">
+        <input type="password" id="admin-password" placeholder="Password" value="changeme123">
+        <br>
+        <button onclick="adminLogin()">Admin Login</button>
+
+        <div id="admin-token-display"></div>
+
+        <!-- Withdrawal Management Section -->
+        <h2>2. Withdrawal Management</h2>
+        <button onclick="testGetPendingWithdrawals()">Get Pending Withdrawals</button>
+        <button onclick="testCompleteWithdrawal()">Complete Withdrawal</button>
+        <button onclick="testFailWithdrawal()">Mark Withdrawal as Failed</button>
+        <div id="adminWithdrawalResult" class="response-box"></div>
+
+        <!-- Deposit Processing Section -->
+        <h2>3. Deposit Processing</h2>
+        <button onclick="viewPendingDeposits()">View Pending Deposits</button>
+        <button onclick="transferUSDT()">Transfer USDT to User</button>
+        <div id="depositResult" class="response-box"></div>
+
+        <!-- Manual Fund Transfers Section -->
+        <h2>4. Manual Fund Transfers</h2>
+        <div class="info">
+            <p><strong>Transfer USDT between broker and user accounts</strong></p>
+            <p>Use this for: funding test users, adding bonuses, reclaiming funds, manual adjustments</p>
+        </div>
+
+        <div style="margin: 20px 0; padding: 15px; border: 2px solid #2196F3; border-radius: 8px; background-color: #E3F2FD;">
+            <h3>Transfer Settings</h3>
+
+            <label><strong>Select User:</strong></label><br>
+            <select id="transfer-user-select" style="padding: 8px; width: 400px; margin: 5px;">
+                <option value="">-- Select User --</option>
+            </select>
+            <button onclick="loadUsersForTransfer()" style="padding: 8px; margin-left: 5px;">Refresh Users</button>
+            <br><br>
+
+            <label><strong>Amount (USDT):</strong></label><br>
+            <input type="number" id="transfer-amount" placeholder="e.g., 10.50" step="0.01" style="padding: 8px; width: 200px; margin: 5px;">
+            <br><br>
+
+            <label><strong>Direction:</strong></label><br>
+            <select id="transfer-direction" style="padding: 8px; width: 300px; margin: 5px;">
+                <option value="OUT">OUT - Broker → User (Fund User)</option>
+                <option value="RECLAIM">RECLAIM - User → Broker (Reclaim Funds)</option>
+            </select>
+            <br><br>
+
+            <label>
+                <input type="checkbox" id="transfer-to-trade" checked>
+                <strong>Auto-transfer to TRADE account</strong> (user can trade immediately)
+            </label>
+            <br><br>
+
+            <label><strong>Admin Notes (optional):</strong></label><br>
+            <textarea id="transfer-notes" placeholder="Reason for transfer..." style="padding: 8px; width: 400px; height: 60px; margin: 5px;"></textarea>
+            <br><br>
+
+            <button onclick="executeManualTransfer()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">
+                Execute Transfer
+            </button>
+            <button onclick="viewTransferHistory()" style="padding: 10px 20px; background-color: #2196F3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 10px;">
+                View History
+            </button>
+        </div>
+
+        <div id="transfer-result" class="response-box"></div>
+
+        <!-- User Management Section -->
+        <h2>5. User Management</h2>
+        <button onclick="testListAllUsers()">List All Users</button>
+        <br>
+        <input type="text" id="user-mgmt-id" placeholder="User ID (UUID)">
+        <button onclick="testGetUserDetails()">Get User Details</button>
+        <button onclick="testGetUserTransactions()">Get User Transactions</button>
+        <div id="userMgmtResult" class="response-box"></div>
+
+        <!-- Configuration Management Section -->
+        <h2>6. Configuration Management</h2>
+        <button onclick="testGetConversionRate()">Get Conversion Rate</button>
+        <br>
+        <input type="number" id="config-new-rate" placeholder="New Rate (e.g., 84.50)" step="0.01">
+        <button onclick="testUpdateConversionRate()">Update Conversion Rate</button>
+        <br><br>
+        <button onclick="testListAllTokens()">List All Tokens</button>
+        <br>
+        <input type="text" id="config-token-symbol" placeholder="Token Symbol (e.g., BTC)">
+        <input type="text" id="config-token-active" placeholder="is_active (true/false)">
+        <br>
+        <input type="number" id="config-token-min" placeholder="quote_min_size" step="0.01">
+        <input type="number" id="config-token-max" placeholder="quote_max_size" step="0.01">
+        <button onclick="testUpdateTokenConfig()">Update Token Config</button>
+        <div id="configResult" class="response-box"></div>
+
+        <!-- Dashboard Stats Section -->
+        <h2>7. Dashboard Statistics</h2>
+        <button onclick="testGetDashboardStats()">Get Overview Stats</button>
+        <div id="statsResult" class="response-box"></div>
+
+        <!-- Response Display -->
+        <h2>Response</h2>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        // API Base URL - automatically detect current host (works locally and on remote server)
+        const API_BASE = window.location.origin + '/api/admin';
+        let adminToken = '';
+
+        async function adminLogin() {
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    adminToken = data.data.token;
+                    document.getElementById('admin-token-display').innerHTML = `
+                        <div class="info">
+                            <strong>✓ Logged in successfully</strong><br>
+                            Token: <code>${adminToken.substring(0, 50)}...</code>
+                        </div>
+                    `;
+                }
+
+                displayResponse(response.status, data);
+            } catch (error) {
+                displayError(error.message);
+            }
+        }
+
+        // Admin Withdrawal Processing
+        let pendingWithdrawals = [];
+
+        async function testGetPendingWithdrawals() {
+            const result = document.getElementById('adminWithdrawalResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/withdrawals/pending`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    pendingWithdrawals = data.data;
+                    result.innerHTML = `<strong>Pending Withdrawals (${data.data.length}):</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testCompleteWithdrawal() {
+            const result = document.getElementById('adminWithdrawalResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            if (pendingWithdrawals.length === 0) {
+                result.innerHTML = '<span style="color: red;">No pending withdrawals. Refresh list first.</span>';
+                return;
+            }
+
+            const withdrawal = pendingWithdrawals[0];
+            const utrNumber = 'UTR' + Date.now();
+
+            if (!confirm(`Complete withdrawal of ₹${withdrawal.amount_inr} to ${withdrawal.account_number}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/withdrawals/${withdrawal.id}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        utr_number: utrNumber,
+                        admin_notes: 'Tested via admin UI'
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>Withdrawal Completed:</strong><br>` +
+                        `ID: ${data.data.id}<br>` +
+                        `Status: ${data.data.status}<br>` +
+                        `Completed At: ${data.data.completed_at}<br>` +
+                        `<br><strong>Full response:</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+
+                    // Refresh list
+                    await testGetPendingWithdrawals();
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testFailWithdrawal() {
+            const result = document.getElementById('adminWithdrawalResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            if (pendingWithdrawals.length === 0) {
+                result.innerHTML = '<span style="color: red;">No pending withdrawals. Refresh list first.</span>';
+                return;
+            }
+
+            const withdrawal = pendingWithdrawals[0];
+            const reason = prompt('Enter failure reason:', 'Insufficient USDT balance');
+
+            if (!reason) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/withdrawals/${withdrawal.id}/fail`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        failed_reason: reason,
+                        admin_notes: 'Marked as failed via admin UI'
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>Withdrawal Failed:</strong><br>` +
+                        `ID: ${data.data.id}<br>` +
+                        `Status: ${data.data.status}<br>` +
+                        `Reason: ${data.data.failed_reason}<br>` +
+                        `<br><strong>Full response:</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+
+                    // Refresh list
+                    await testGetPendingWithdrawals();
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Deposit Processing Functions
+        async function viewPendingDeposits() {
+            const result = document.getElementById('depositResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/deposits/pending`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>Pending Deposits (${data.deposits.length}):</strong><br>` +
+                        JSON.stringify(data.deposits, null, 2);
+
+                    // Store first deposit ID for easy testing
+                    if (data.deposits.length > 0) {
+                        window.testDepositId = data.deposits[0].id;
+                        console.log('Stored deposit ID for testing:', window.testDepositId);
+                    }
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.message}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function transferUSDT() {
+            const result = document.getElementById('depositResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            // Use stored deposit ID or prompt
+            const depositId = window.testDepositId || prompt('Enter Deposit ID:');
+            if (!depositId) return;
+
+            const amountUsdt = prompt('Enter USDT amount to transfer:', '11.9');
+            if (!amountUsdt) return;
+
+            const adminNotes = prompt('Enter admin notes (optional):', 'USDT transferred by admin');
+
+            try {
+                const response = await fetch(`${API_BASE}/deposits/${depositId}/transfer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        amount_usdt: parseFloat(amountUsdt),
+                        admin_notes: adminNotes
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('USDT transferred successfully!');
+                    result.innerHTML =
+                        `<strong>Transfer Complete</strong><br>` +
+                        `<pre>${JSON.stringify(data.deposit, null, 2)}</pre>`;
+
+                    // Refresh pending list
+                    viewPendingDeposits();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error transferring USDT: ' + error.message);
+            }
+        }
+
+        // User Management Functions
+        async function testListAllUsers() {
+            const result = document.getElementById('userMgmtResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users?page=1&limit=50`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>All Users (${data.data.users.length}):</strong><br>` +
+                        `Page: ${data.data.page} | Total Pages: ${data.data.totalPages} | Total: ${data.data.total}<br><br>` +
+                        JSON.stringify(data.data.users, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testGetUserDetails() {
+            const result = document.getElementById('userMgmtResult');
+            const userId = document.getElementById('user-mgmt-id').value;
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            if (!userId) {
+                result.innerHTML = '<span style="color: red;">Please enter a user ID</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>User Details:</strong><br>` +
+                        `Name: ${data.data.user.full_name}<br>` +
+                        `Email: ${data.data.user.email}<br>` +
+                        `Phone: ${data.data.user.phone}<br>` +
+                        `KYC Status: ${data.data.kyc ? data.data.kyc.status : 'Not submitted'}<br><br>` +
+                        `<strong>Full response:</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testGetUserTransactions() {
+            const result = document.getElementById('userMgmtResult');
+            const userId = document.getElementById('user-mgmt-id').value;
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            if (!userId) {
+                result.innerHTML = '<span style="color: red;">Please enter a user ID</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users/${userId}/transactions?type=all&limit=100`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Backend returns data as array directly, not data.transactions
+                    const txns = data.data || [];
+
+                    if (txns.length === 0) {
+                        result.innerHTML = '<strong>User Transactions:</strong><br><span style="color: #666;">No transactions found for this user.</span>';
+                    } else {
+                        result.innerHTML = `<strong>User Transactions (${txns.length}):</strong><br>` +
+                            `Deposits: ${txns.filter(t => t.type === 'deposit').length} | ` +
+                            `Withdrawals: ${txns.filter(t => t.type === 'withdrawal').length} | ` +
+                            `Trades: ${txns.filter(t => t.type === 'trade').length}<br><br>` +
+                            JSON.stringify(txns, null, 2);
+                    }
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Configuration Management Functions
+        async function testGetConversionRate() {
+            const result = document.getElementById('configResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/config/conversion-rate`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>Conversion Rate:</strong><br>` +
+                        `Rate: ${data.data.conversion_rate} INR/USDT<br>` +
+                        `Last Updated: ${data.data.updated_at}<br><br>` +
+                        `<strong>Full response:</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testUpdateConversionRate() {
+            const result = document.getElementById('configResult');
+            const newRate = document.getElementById('config-new-rate').value;
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            if (!newRate || parseFloat(newRate) <= 0) {
+                result.innerHTML = '<span style="color: red;">Please enter a valid rate (greater than 0)</span>';
+                return;
+            }
+
+            if (!confirm(`Update conversion rate to ${newRate} INR/USDT?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/config/conversion-rate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rate: parseFloat(newRate) })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>Conversion Rate Updated:</strong><br>` +
+                        `New Rate: ${data.data.conversion_rate} INR/USDT<br>` +
+                        `Updated At: ${data.data.updated_at}<br><br>` +
+                        `<strong>Full response:</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testListAllTokens() {
+            const result = document.getElementById('configResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/config/tokens`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>All Tokens (${data.data.length}):</strong><br><br>` +
+                        JSON.stringify(data.data, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        async function testUpdateTokenConfig() {
+            const result = document.getElementById('configResult');
+            const symbol = document.getElementById('config-token-symbol').value;
+            const isActive = document.getElementById('config-token-active').value;
+            const minSize = document.getElementById('config-token-min').value;
+            const maxSize = document.getElementById('config-token-max').value;
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            if (!symbol) {
+                result.innerHTML = '<span style="color: red;">Please enter token symbol</span>';
+                return;
+            }
+
+            const updateData = {};
+            if (isActive !== '') updateData.is_active = isActive === 'true';
+            if (minSize) updateData.quote_min_size = parseFloat(minSize);
+            if (maxSize) updateData.quote_max_size = parseFloat(maxSize);
+
+            if (Object.keys(updateData).length === 0) {
+                result.innerHTML = '<span style="color: red;">Please enter at least one field to update</span>';
+                return;
+            }
+
+            if (!confirm(`Update token config for ${symbol}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/config/tokens/${symbol}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `<strong>Token Config Updated:</strong><br>` +
+                        `Symbol: ${data.data.symbol}<br>` +
+                        `Active: ${data.data.is_active}<br>` +
+                        `Min Size: ${data.data.quote_min_size}<br>` +
+                        `Max Size: ${data.data.quote_max_size}<br><br>` +
+                        `<strong>Full response:</strong><br>` +
+                        JSON.stringify(data.data, null, 2);
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Dashboard Stats Functions
+        async function testGetDashboardStats() {
+            const result = document.getElementById('statsResult');
+
+            if (!adminToken) {
+                result.innerHTML = '<span style="color: red;">Please login first</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/stats/overview`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.data;
+
+                    // Build broker balance tooltip with breakdown
+                    let brokerTooltip = '';
+                    if (stats.brokerBalance && (stats.brokerBalance.main > 0 || stats.brokerBalance.trade > 0)) {
+                        brokerTooltip = `MAIN: ${stats.brokerBalance.main.toFixed(2)} | TRADE: ${stats.brokerBalance.trade.toFixed(2)}`;
+                    }
+
+                    result.innerHTML = `
+                        <strong>Dashboard Overview Stats:</strong><br><br>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="background: #e0e0e0;"><td style="padding: 8px; border: 1px solid #ccc;"><strong>Metric</strong></td><td style="padding: 8px; border: 1px solid #ccc;"><strong>Value</strong></td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Total Users</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.totalUsers}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Pending KYC</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.pendingKYC}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Approved KYC</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.approvedKYC}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Total Deposits</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.totalDeposits} INR</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Total Withdrawals</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.totalWithdrawals} INR</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Pending Withdrawals</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.pendingWithdrawals}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Total Trades</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.totalTrades}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Platform Revenue</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.platformRevenue.toFixed(2)} INR</td></tr>
+                            <tr style="background-color: #e8f5e9;"><td style="padding: 8px; border: 1px solid #ccc;"><strong>💰 Broker Balance (USDT)</strong></td><td style="padding: 8px; border: 1px solid #ccc; color: #2e7d32; font-weight: bold;" title="${brokerTooltip}">${stats.brokerBalance ? stats.brokerBalance.usdt.toFixed(2) : 'N/A'} USDT</td></tr>
+                            <tr style="background-color: #e8f5e9;"><td style="padding: 8px; border: 1px solid #ccc;"><strong>💰 Broker Balance (INR)</strong></td><td style="padding: 8px; border: 1px solid #ccc; color: #2e7d32; font-weight: bold;">₹${stats.brokerBalance ? stats.brokerBalance.inr.toFixed(2) : 'N/A'}</td></tr>
+                            <tr><td style="padding: 8px; border: 1px solid #ccc;">Conversion Rate</td><td style="padding: 8px; border: 1px solid #ccc;">${stats.conversionRate.toFixed(2)} INR/USDT</td></tr>
+                        </table>
+                        <br><strong>Full JSON Response:</strong><br>
+                        ${JSON.stringify(stats, null, 2)}
+                    `;
+                } else {
+                    result.innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Display helpers
+        function displayResponse(status, data) {
+            document.getElementById('response').innerHTML = `
+                <h3>Status: ${status}</h3>
+                <div class="response-box">${JSON.stringify(data, null, 2)}</div>
+            `;
+        }
+
+        function displayError(message) {
+            document.getElementById('response').innerHTML = `
+                <div class="error">Error: ${message}</div>
+            `;
+        }
+
+        // Manual Transfer Functions
+
+        async function loadUsersForTransfer() {
+            if (!adminToken) {
+                alert('Please login first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                const data = await response.json();
+                const select = document.getElementById('transfer-user-select');
+                select.innerHTML = '<option value="">-- Select User --</option>';
+
+                if (data.success && data.users) {
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = `${user.email} - ${user.full_name} (${user.kyc_status})`;
+                        option.dataset.subAccountUid = user.kucoin_sub_account_uid || 'none';
+                        select.appendChild(option);
+                    });
+                    alert(`Loaded ${data.users.length} users`);
+                }
+            } catch (error) {
+                alert('Error loading users: ' + error.message);
+            }
+        }
+
+        async function executeManualTransfer() {
+            if (!adminToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const userId = document.getElementById('transfer-user-select').value;
+            const amount = parseFloat(document.getElementById('transfer-amount').value);
+            const direction = document.getElementById('transfer-direction').value;
+            const toTrade = document.getElementById('transfer-to-trade').checked;
+            const notes = document.getElementById('transfer-notes').value;
+            const result = document.getElementById('transfer-result');
+
+            // Validation
+            if (!userId) {
+                alert('Please select a user');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            // Confirm action
+            const userEmail = document.getElementById('transfer-user-select').selectedOptions[0].text;
+            const confirmMsg = direction === 'OUT'
+                ? `Fund ${userEmail} with ${amount} USDT?`
+                : `Reclaim ${amount} USDT from ${userEmail}?`;
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            result.innerHTML = '<p>⏳ Processing transfer...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/transfers/manual`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        amount_usdt: amount,
+                        direction: direction,
+                        to_trade: toTrade,
+                        notes: notes || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML =
+                        `<h3 style="color: green;">✅ Transfer Successful!</h3>
+                        <p><strong>Amount:</strong> ${amount} USDT</p>
+                        <p><strong>Direction:</strong> ${direction === 'OUT' ? 'Broker → User' : 'User → Broker'}</p>
+                        <p><strong>User:</strong> ${data.user.email}</p>
+                        <p><strong>Final Location:</strong> ${data.finalLocation}</p>
+                        <details>
+                            <summary>Transfer Details</summary>
+                            <pre>${JSON.stringify(data.transfers, null, 2)}</pre>
+                        </details>`;
+
+                    // Clear form
+                    document.getElementById('transfer-amount').value = '';
+                    document.getElementById('transfer-notes').value = '';
+                } else {
+                    result.innerHTML =
+                        `<h3 style="color: red;">❌ Transfer Failed</h3>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Message:</strong> ${data.message}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML =
+                    `<h3 style="color: red;">❌ Error</h3>
+                    <p>${error.message}</p>`;
+            }
+        }
+
+        async function viewTransferHistory() {
+            if (!adminToken) {
+                alert('Please login first');
+                return;
+            }
+
+            const result = document.getElementById('transfer-result');
+            result.innerHTML = '<p>⏳ Loading transfer history...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/transfers/history?limit=20`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.transfers) {
+                    let html = '<h3>Recent Manual Transfers (Last 20)</h3><table style="width: 100%; border-collapse: collapse;">';
+                    html += '<tr style="background: #f0f0f0;"><th>Date</th><th>Admin</th><th>User</th><th>Amount</th><th>Direction</th><th>To Trade</th><th>Notes</th></tr>';
+
+                    data.transfers.forEach(t => {
+                        const date = new Date(t.created_at).toLocaleString();
+                        const direction = t.direction === 'OUT' ? '→ User' : '← User';
+                        html += `<tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px;">${date}</td>
+                            <td style="padding: 8px;">${t.admin_username}</td>
+                            <td style="padding: 8px;">${t.user_email}</td>
+                            <td style="padding: 8px;"><strong>${t.amount_usdt} USDT</strong></td>
+                            <td style="padding: 8px;">${direction}</td>
+                            <td style="padding: 8px;">${t.to_trade ? '✅' : '❌'}</td>
+                            <td style="padding: 8px;">${t.notes || '-'}</td>
+                        </tr>`;
+                    });
+
+                    html += '</table>';
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<p>No transfer history found</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

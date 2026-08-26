@@ -1,0 +1,15 @@
+# Docker Compose for Sikka Expo App
+version: '3.8'
+
+services:
+  # Expo Development Server with Tunnel (Global Access)
+  sikka-expo:
+    build: .
+    network_mode: host
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true

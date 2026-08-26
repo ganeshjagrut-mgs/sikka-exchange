@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "Sikkaa Exchange",
+    "slug": "sikka-expo",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "sikka",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#181a2a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sikka.crypto",
+      "associatedDomains": [
+        "applinks:sikka-test.firebaseapp.com"
+      ],
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "phonepe",
+          "tez",
+          "paytmmp",
+          "bhim",
+          "amazonpay",
+          "credpay"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#181a2a"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.sikka.crypto",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "sikka-test.firebaseapp.com",
+              "pathPrefix": "/__/auth/action"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-system-ui",
+        {
+          "userInterfaceStyle": "dark"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dd7925e4-04a6-469d-a8c7-353a47b6ec95"
+      }
+    }
+  }
+}
